@@ -36,7 +36,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.themehedi.aifitnesscoach.domain.model.AnalysisResult
 import com.themehedi.aifitnesscoach.ml.analysis.ExerciseAnalyzer
 import com.themehedi.aifitnesscoach.presentation.utils.CameraPermission
-import dagger.hilt.android.AndroidEntryPoint
+import com.themehedi.aifitnesscoach.presentation.utils.CameraTestUtility
 
 /**
  * Created by Mohammad Mehedi Hasan on 26,August,2025
@@ -73,11 +73,25 @@ fun CameraContent(
 
     val cameraController = remember {
         try {
-            LifecycleCameraController(context).apply {
-                setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
+            // Test camera availability first
+            val cameraTest = CameraTestUtility.testCameraAvailability(context)
+            if (!cameraTest.isAvailable) {
+                cameraError = "Camera not available: ${cameraTest.error ?: "No camera found"}"
+                null
+            } else {
+                try {
+                    LifecycleCameraController(context).apply {
+                        setEnabledUseCases(
+                            CameraController.IMAGE_ANALYSIS
+                        )
+                    }
+                } catch (e: Exception) {
+                    cameraError = "Failed to create camera controller: ${e.message}"
+                    null
+                }
             }
         } catch (e: Exception) {
-            cameraError = "Camera controller error: ${e.message}"
+            cameraError = "Camera test failed: ${e.message}"
             null
         }
     }
@@ -125,9 +139,9 @@ fun CameraContent(
                     val analyzer = PoseDetectionAnalyzer(poseDetector) { pose ->
                         val result = when (exerciseType) {
                             ExerciseType.SQUAT -> exerciseAnalyzer.analyzeSquat(pose)
-                            ExerciseType.PUSHUP -> exerciseAnalyzer.analyzeSquat(pose)
-                            ExerciseType.LUNGE -> exerciseAnalyzer.analyzeSquat(pose)
-                            ExerciseType.PLANK -> exerciseAnalyzer.analyzeSquat(pose)
+                            ExerciseType.PUSHUP -> exerciseAnalyzer.analyzePushup(pose)
+                            ExerciseType.LUNGE -> exerciseAnalyzer.analyzeLunge(pose)
+                            ExerciseType.PLANK -> exerciseAnalyzer.analyzePlank(pose)
                             else -> AnalysisResult(
                                 isValidForm = false,
                                 feedback = "Exercise not supported",
@@ -137,14 +151,30 @@ fun CameraContent(
                         viewModel.updateAnalysisResult(result)
                     }
 
-                    cameraController.setImageAnalysisAnalyzer(
-                        ContextCompat.getMainExecutor(context),
-                        analyzer
-                    )
+                    try {
+                        cameraController.setImageAnalysisAnalyzer(
+                            ContextCompat.getMainExecutor(context),
+                            analyzer
+                        )
+                    } catch (e: Exception) {
+                        // Handle analyzer setup error
+                        viewModel.updateAnalysisResult(
+                            AnalysisResult(
+                                isValidForm = false,
+                                feedback = "Camera analysis error: ${e.message}",
+                                confidence = 0.0f
+                            )
+                        )
+                    }
 
                     onDispose {
-                        cameraController.clearImageAnalysisAnalyzer()
-                        poseDetector.close()
+                        try {
+                            cameraController.clearImageAnalysisAnalyzer()
+                            analyzer.shutdown()
+                            poseDetector.close()
+                        } catch (e: Exception) {
+                            // Handle cleanup error
+                        }
                     }
                 }
 

@@ -20,9 +20,9 @@ class AnalyzeExerciseForm @Inject constructor(
         return withContext(Dispatchers.Default) {
             when (exerciseType) {
                 ExerciseType.SQUAT -> exerciseAnalyzer.analyzeSquat(pose)
-                ExerciseType.PUSHUP -> TODO()
-                ExerciseType.LUNGE -> TODO()
-                ExerciseType.PLANK -> TODO()
+                ExerciseType.PUSHUP -> exerciseAnalyzer.analyzePushup(pose)
+                ExerciseType.LUNGE -> exerciseAnalyzer.analyzeLunge(pose)
+                ExerciseType.PLANK -> exerciseAnalyzer.analyzePlank(pose)
                 else -> AnalysisResult(
                     isValidForm = false,
                     feedback = "Exercise analysis not implemented yet",

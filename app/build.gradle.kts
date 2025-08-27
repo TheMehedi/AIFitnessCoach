@@ -64,6 +64,11 @@ dependencies {
 // ML Kit Pose Detection
     implementation ("com.google.mlkit:pose-detection:18.0.0-beta5")
     implementation ("com.google.mlkit:pose-detection-accurate:18.0.0-beta5")
+    implementation ("com.google.mlkit:vision-common:17.3.0")
+
+// Additional camera support
+    implementation ("androidx.camera:camera-core:1.4.2")
+    implementation ("androidx.camera:camera-extensions:1.4.2")
 
 // Room Database
     implementation ("androidx.room:room-runtime:2.7.2")

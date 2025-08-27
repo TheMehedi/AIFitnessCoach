@@ -44,18 +44,18 @@ fun CameraPreview(
                 try {
                     this.controller = controller
                 } catch (e: Exception) {
-                    previewError = e.message
+                    previewError = "Preview setup error: ${e.message}"
                 }
             }
         },
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         update = { previewView ->
             try {
                 if (previewView.controller == null) {
                     previewView.controller = controller
                 }
             } catch (e: Exception) {
-                previewError = e.message
+                previewError = "Preview update error: ${e.message}"
             }
         }
     )

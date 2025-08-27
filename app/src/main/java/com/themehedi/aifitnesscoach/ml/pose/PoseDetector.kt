@@ -1,5 +1,6 @@
 package com.themehedi.aifitnesscoach.ml.pose
 
+import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.pose.Pose
@@ -14,10 +15,20 @@ class PoseDetector {
     private val detector = PoseDetection.getClient(options)
     
     fun processImage(image: InputImage): Task<Pose> {
-        return detector.process(image)
+        return try {
+            detector.process(image)
+        } catch (e: Exception) {
+            Log.e("PoseDetector", "Error processing image", e)
+            // Return a failed task
+            com.google.android.gms.tasks.Tasks.forException(e)
+        }
     }
     
     fun close() {
-        detector.close()
+        try {
+            detector.close()
+        } catch (e: Exception) {
+            Log.e("PoseDetector", "Error closing detector", e)
+        }
     }
 }

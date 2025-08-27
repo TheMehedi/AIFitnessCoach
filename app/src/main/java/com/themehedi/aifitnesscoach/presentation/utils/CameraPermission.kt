@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,12 +49,15 @@ object CameraPermission {
       )
     }
 
+    var permissionDenied by remember { mutableStateOf(false) }
+
     val launcher = rememberLauncherForActivityResult(
       ActivityResultContracts.RequestPermission()
     ) { isGranted ->
       hasCameraPermission = isGranted
       if (!isGranted) {
-        Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+        permissionDenied = true
+        Toast.makeText(context, "Camera permission is required for pose detection", Toast.LENGTH_LONG).show()
       }
     }
 
@@ -80,10 +84,28 @@ object CameraPermission {
             fontWeight = FontWeight.Bold
           )
           Spacer(modifier = Modifier.height(16.dp))
+          Text(
+            "This app needs camera access to analyze your exercise form and provide real-time feedback.",
+            color = Color.White,
+            fontSize = 14.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+          )
+          Spacer(modifier = Modifier.height(24.dp))
           Button(
             onClick = { launcher.launch(Manifest.permission.CAMERA) }
           ) {
             Text("Grant Permission")
+          }
+          if (permissionDenied) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+              "Permission denied. Please enable camera access in Settings to use this feature.",
+              color = Color.Red,
+              fontSize = 12.sp,
+              textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+              modifier = Modifier.padding(horizontal = 32.dp)
+            )
           }
         }
       }

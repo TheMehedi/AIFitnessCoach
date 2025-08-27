@@ -23,20 +23,41 @@ class PoseDetectionAnalyzer(
   override fun analyze(imageProxy: ImageProxy) {
     val mediaImage = imageProxy.image
     if (mediaImage != null) {
-      val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+      try {
+        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-      poseDetector.processImage(image)
-        .addOnSuccessListener(executor) { pose ->
-          onPoseDetected(pose)
-        }
-        .addOnFailureListener(executor) { e ->
-          Log.e("PoseDetection", "Pose detection failed", e)
-        }
-        .addOnCompleteListener {
-          imageProxy.close()
-        }
+        poseDetector.processImage(image)
+          .addOnSuccessListener(executor) { pose ->
+            try {
+              onPoseDetected(pose)
+            } catch (e: Exception) {
+              Log.e("PoseDetection", "Error in pose callback", e)
+            }
+          }
+          .addOnFailureListener(executor) { e ->
+            Log.e("PoseDetection", "Pose detection failed", e)
+          }
+          .addOnCompleteListener {
+            try {
+              imageProxy.close()
+            } catch (e: Exception) {
+              Log.e("PoseDetection", "Error closing image proxy", e)
+            }
+          }
+      } catch (e: Exception) {
+        Log.e("PoseDetection", "Error processing image", e)
+        imageProxy.close()
+      }
     } else {
       imageProxy.close()
+    }
+  }
+
+  fun shutdown() {
+    try {
+      executor.shutdown()
+    } catch (e: Exception) {
+      Log.e("PoseDetection", "Error shutting down executor", e)
     }
   }
 }
